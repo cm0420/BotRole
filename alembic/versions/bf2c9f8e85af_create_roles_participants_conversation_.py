@@ -41,7 +41,7 @@ def upgrade() -> None:
     sa.Column('pending_total_value', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('pending_role_id', sa.UUID(), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['pending_role_id'], ['roles.id'], ),
+    sa.ForeignKeyConstraint(['pending_role_id'], ['roles.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('phone')
     )
     op.create_table('participants',
