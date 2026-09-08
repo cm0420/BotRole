@@ -12,7 +12,11 @@ _TXID_SEM_REFERENCIA = "***"
 
 
 def _tlv(field_id: str, value: str) -> str:
-    return f"{field_id}{len(value):02d}{value}"
+    # Tamanho em bytes UTF-8, não em caracteres — um valor com acento/caractere
+    # não-ASCII (ex: chave de e-mail) desalinharia a leitura por offset dos
+    # campos seguintes se contássemos caracteres.
+    length = len(value.encode("utf-8"))
+    return f"{field_id}{length:02d}{value}"
 
 
 def _crc16_ccitt(payload: str) -> str:
@@ -115,6 +119,7 @@ class BrCodePixGenerator:
         merchant_city: str,
         txid: str,
     ) -> PixPayload:
+        """Gera o payload BR Code e a imagem do QR Code pro Pix de um rolê."""
         payload = gerar_payload_copia_e_cola(
             pix_key, pix_key_type, amount, merchant_name, merchant_city, txid
         )
