@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+alembic
+psycopg[binary]
+pydantic>=2
+pydantic-settings
+httpx
+pytesseract
+Pillow
+qrcode[pil]
+pytest
+pytest-asyncio
