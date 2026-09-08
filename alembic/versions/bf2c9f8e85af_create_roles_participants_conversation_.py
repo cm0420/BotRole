@@ -34,14 +34,14 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_roles_organizer_phone'), 'roles', ['organizer_phone'], unique=False)
-    op.create_index(op.f('ix_roles_role_code'), 'roles', ['role_code'], unique=False)
+    op.create_index(op.f('ix_roles_role_code'), 'roles', ['role_code'], unique=True)
     op.create_table('conversation_states',
     sa.Column('phone', sa.String(), nullable=False),
     sa.Column('step', sa.Enum('aguardando_valor', 'aguardando_num_pessoas', 'aguardando_confirmacao_encerramento', name='conversation_step'), nullable=False),
     sa.Column('pending_total_value', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('pending_role_id', sa.UUID(), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['pending_role_id'], ['roles.id'], ),
+    sa.ForeignKeyConstraint(['pending_role_id'], ['roles.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('phone')
     )
     op.create_table('participants',
