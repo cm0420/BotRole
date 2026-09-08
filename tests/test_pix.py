@@ -18,12 +18,15 @@ from app.services.pix import (
 
 
 def _parse_tlv(payload: str) -> dict[str, str]:
+    # Opera em bytes UTF-8, não em caracteres: o tamanho de cada campo no
+    # BR Code é em bytes (ver _tlv em app/services/pix.py).
+    data = payload.encode("utf-8")
     fields: dict[str, str] = {}
     i = 0
-    while i < len(payload):
-        field_id = payload[i : i + 2]
-        length = int(payload[i + 2 : i + 4])
-        value = payload[i + 4 : i + 4 + length]
+    while i < len(data):
+        field_id = data[i : i + 2].decode("ascii")
+        length = int(data[i + 2 : i + 4])
+        value = data[i + 4 : i + 4 + length].decode("utf-8")
         fields[field_id] = value
         i += 4 + length
     return fields
@@ -121,6 +124,23 @@ def test_normalizar_chave_cpf_invalida_levanta_erro():
 
 def test_normalizar_chave_cnpj():
     assert _normalizar_chave("12.345.678/0001-95", PixKeyType.cnpj) == "12345678000195"
+
+
+def test_chave_email_nao_ascii_nao_desalinha_campos_seguintes():
+    # "josé@example.com" tem 16 caracteres mas 17 bytes em UTF-8 (é/0xC3 0xA9);
+    # o tamanho do subcampo "01" tem que refletir bytes, não caracteres.
+    payload = gerar_payload_copia_e_cola(
+        pix_key="josé@example.com",
+        pix_key_type=PixKeyType.email,
+        amount=Decimal("10.00"),
+        merchant_name="Fulano",
+        merchant_city="Sao Paulo",
+        txid="AB23",
+    )
+    fields = _parse_tlv(payload)
+    merchant_account_info = _parse_tlv(fields["26"])
+    assert merchant_account_info["01"] == "josé@example.com"
+    assert fields["52"] == "0000"  # campo seguinte não foi corrompido pelo offset errado
 
 
 def test_normalizar_chave_email_e_aleatoria_mantem_valor():
