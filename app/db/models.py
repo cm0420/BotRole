@@ -42,7 +42,7 @@ class Role(Base):
     total_value: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     num_people: Mapped[int] = mapped_column()
     value_per_person: Mapped[Decimal] = mapped_column(Numeric(10, 2))
-    role_code: Mapped[str] = mapped_column(String(4), index=True)
+    role_code: Mapped[str] = mapped_column(String(4), index=True, unique=True)
     pix_key: Mapped[str] = mapped_column(String)
     pix_key_type: Mapped[PixKeyType] = mapped_column(SAEnum(PixKeyType, name="pix_key_type"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
