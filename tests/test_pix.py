@@ -9,7 +9,7 @@ from app.services.interfaces import PixPayload
 from app.services.pix import (
     BrCodePixGenerator,
     _crc16_ccitt,
-    _normalizar_chave,
+    normalizar_chave,
     _sanitizar_txid,
     _tlv,
     gerar_payload_copia_e_cola,
@@ -104,26 +104,26 @@ def test_txid_vazio_ou_invalido_usa_referencia_generica():
         ("+55 11 99999-9999", "+5511999999999"),
     ],
 )
-def test_normalizar_chave_telefone(valor_bruto, esperado):
-    assert _normalizar_chave(valor_bruto, PixKeyType.telefone) == esperado
+def testnormalizar_chave_telefone(valor_bruto, esperado):
+    assert normalizar_chave(valor_bruto, PixKeyType.telefone) == esperado
 
 
-def test_normalizar_chave_telefone_invalida_levanta_erro():
+def testnormalizar_chave_telefone_invalida_levanta_erro():
     with pytest.raises(ValueError):
-        _normalizar_chave("123", PixKeyType.telefone)
+        normalizar_chave("123", PixKeyType.telefone)
 
 
-def test_normalizar_chave_cpf():
-    assert _normalizar_chave("123.456.789-09", PixKeyType.cpf) == "12345678909"
+def testnormalizar_chave_cpf():
+    assert normalizar_chave("123.456.789-09", PixKeyType.cpf) == "12345678909"
 
 
-def test_normalizar_chave_cpf_invalida_levanta_erro():
+def testnormalizar_chave_cpf_invalida_levanta_erro():
     with pytest.raises(ValueError):
-        _normalizar_chave("123", PixKeyType.cpf)
+        normalizar_chave("123", PixKeyType.cpf)
 
 
-def test_normalizar_chave_cnpj():
-    assert _normalizar_chave("12.345.678/0001-95", PixKeyType.cnpj) == "12345678000195"
+def testnormalizar_chave_cnpj():
+    assert normalizar_chave("12.345.678/0001-95", PixKeyType.cnpj) == "12345678000195"
 
 
 def test_chave_email_nao_ascii_nao_desalinha_campos_seguintes():
@@ -143,10 +143,10 @@ def test_chave_email_nao_ascii_nao_desalinha_campos_seguintes():
     assert fields["52"] == "0000"  # campo seguinte não foi corrompido pelo offset errado
 
 
-def test_normalizar_chave_email_e_aleatoria_mantem_valor():
-    assert _normalizar_chave("  a@b.com  ", PixKeyType.email) == "a@b.com"
+def testnormalizar_chave_email_e_aleatoria_mantem_valor():
+    assert normalizar_chave("  a@b.com  ", PixKeyType.email) == "a@b.com"
     assert (
-        _normalizar_chave("123e4567-e89b-12d3-a456-426614174000", PixKeyType.aleatoria)
+        normalizar_chave("123e4567-e89b-12d3-a456-426614174000", PixKeyType.aleatoria)
         == "123e4567-e89b-12d3-a456-426614174000"
     )
 

@@ -47,7 +47,7 @@ def _sanitizar_txid(txid: str) -> str:
     return alnum[:25] if alnum else _TXID_SEM_REFERENCIA
 
 
-def _normalizar_chave(pix_key: str, pix_key_type: PixKeyType) -> str:
+def normalizar_chave(pix_key: str, pix_key_type: PixKeyType) -> str:
     if pix_key_type == PixKeyType.cpf:
         digits = re.sub(r"\D", "", pix_key)
         if len(digits) != 11:
@@ -78,7 +78,7 @@ def gerar_payload_copia_e_cola(
     txid: str,
 ) -> str:
     """Monta o payload BR Code (EMV/Pix) estático, com valor fixo em reais."""
-    chave = _normalizar_chave(pix_key, pix_key_type)
+    chave = normalizar_chave(pix_key, pix_key_type)
     merchant_account_info = _tlv("00", _GUI_PIX) + _tlv("01", chave)
     additional_data = _tlv("05", _sanitizar_txid(txid))
 
