@@ -39,6 +39,14 @@ def downgrade() -> None:
     """Downgrade schema."""
     op.drop_column('conversation_states', 'pending_pix_key_type')
     op.drop_column('conversation_states', 'pending_num_people')
+    # ConversationState é estado efêmero (não é dado do rolê em si): uma linha
+    # parada num passo que deixará de existir é descartável — o organizador
+    # simplesmente recomeça a pergunta. Sem isso, o cast abaixo falharia com
+    # "invalid input value for enum" pra qualquer linha nesses dois passos.
+    op.execute(
+        "DELETE FROM conversation_states "
+        "WHERE step IN ('aguardando_tipo_chave_pix', 'aguardando_chave_pix')"
+    )
     # Postgres não suporta remover valor de enum diretamente: recria o tipo
     # só com os 3 valores originais.
     op.execute("ALTER TYPE conversation_step RENAME TO conversation_step_old")
