@@ -151,9 +151,15 @@ existe estado "encerrado" persistido — encerrar é apagar (seção 6.7).
 **ConversationState** (estado da conversa passo-a-passo, por telefone)
 - `phone` (str, PK)
 - `step` (enum: aguardando_valor, aguardando_num_pessoas,
+  aguardando_tipo_chave_pix, aguardando_chave_pix,
   aguardando_confirmacao_encerramento)
 - `pending_total_value` (Decimal, nullable — guarda o valor já
-  informado enquanto aguarda o nº de pessoas)
+  informado enquanto aguarda os passos seguintes)
+- `pending_num_people` (int, nullable — guarda o nº de pessoas já
+  informado enquanto aguarda o tipo/valor da chave PIX)
+- `pending_pix_key_type` (enum: cpf, cnpj, email, telefone, aleatoria;
+  nullable — guarda o tipo de chave já escolhido enquanto aguarda o
+  valor da chave)
 - `pending_role_id` (UUID, nullable, FK -> Role — guarda qual rolê está
   prestes a ser apagado enquanto aguarda confirmação de encerramento)
 - `updated_at` (datetime)
@@ -177,8 +183,9 @@ verificação até a primeira que casar:
 3. **Telefone tem `ConversationState.step ==
    aguardando_confirmacao_encerramento`** → ver seção 6.7 (confirma ou
    cancela o encerramento, dependendo do conteúdo da mensagem).
-4. **Telefone tem uma `ConversationState` pendente** (`aguardando_valor`
-   ou `aguardando_num_pessoas`) → `conversation_service` interpreta a
+4. **Telefone tem uma `ConversationState` pendente** (`aguardando_valor`,
+   `aguardando_num_pessoas`, `aguardando_tipo_chave_pix` ou
+   `aguardando_chave_pix`) → `conversation_service` interpreta a
    mensagem como resposta e avança o passo (seção 6.3).
 5. **Mensagem de texto contém uma palavra-chave de comando reconhecida**
    (case-insensitive): `"pago"`, `"status"`, `"quem pagou"` → bot busca
@@ -219,13 +226,40 @@ verificação até a primeira que casar:
    pergunta o número de pessoas.
 3. Organizador responde com o número de pessoas. Deve ser um inteiro
    `>= 2`. Erro de parsing ou valor inválido → mesma regra do passo 2
-   (repergunta, mantém estado). Se ok, chama
-   `role_service.criar_role(total_value, num_people, organizer_phone)`.
-4. `role_service.criar_role`: calcula `value_per_person` (seção 6.4),
+   (repergunta, mantém estado). Se ok, salva em `pending_num_people`,
+   avança `step = aguardando_tipo_chave_pix` e pergunta o tipo da
+   chave PIX, com um menu numerado: `"1) CPF  2) CNPJ  3) E-mail
+   4) Telefone  5) Chave aleatória"`.
+4. Organizador responde o tipo. Aceita o número (`"1"`..`"5"`) ou a
+   palavra correspondente, case-insensitive (`"cpf"`, `"cnpj"`,
+   `"email"`, `"telefone"`, `"aleatoria"`/`"aleatória"`). Resposta fora
+   dessas opções → mesma regra do passo 2 (repergunta, mantém estado).
+   Se ok, salva em `pending_pix_key_type`, avança
+   `step = aguardando_chave_pix` e pergunta a chave PIX (o texto da
+   pergunta menciona o tipo escolhido, ex: "me manda seu CPF").
+5. Organizador responde a chave. `conversation_service` reaproveita a
+   normalização/validação de `services/pix.py` (a mesma usada na
+   geração do payload) pra validar a chave contra o
+   `pending_pix_key_type` — nunca duplicar essa lógica. Erro de
+   validação → mesma regra do passo 2 (repergunta, mantém estado). Se
+   ok, chama
+   `role_service.criar_role(total_value, num_people, organizer_phone, pix_key, pix_key_type)`.
+6. `role_service.criar_role`: calcula `value_per_person` (seção 6.4),
    gera `role_code` (seção 6.2), chama `pix.py` pra gerar payload BR
-   Code + imagem do QR, cria o `Role`, **apaga** a `ConversationState`
-   daquele telefone.
-5. Bot devolve pro organizador, em uma única mensagem:
+   Code + imagem do QR — usando `merchant_name` e `merchant_city` como
+   **constantes fixas genéricas** (não perguntadas ao organizador; ver
+   nota abaixo), cria o `Role`, **apaga** a `ConversationState` daquele
+   telefone.
+
+   > **Por que `merchant_name`/`merchant_city` são fixos:** o Manual de
+   > Padrões para Iniciação do Pix (Bacen) documenta que, no QR estático,
+   > o nome exibido pro pagador vem sempre da consulta ao DICT pela
+   > chave PIX — o campo `Merchant Name` do BR Code é ignorado pelo
+   > app de quem paga. Como o valor não afeta o pagamento nem o que o
+   > pagador vê, não há motivo pra perguntar isso ao organizador.
+   > Constantes centralizadas no topo de `role_service.py` (seção 8):
+   > `PIX_MERCHANT_NAME = "Rolezin"`, `PIX_MERCHANT_CITY = "BRASIL"`.
+7. Bot devolve pro organizador, em uma única mensagem:
    - Valor por pessoa + imagem do QR + copia-e-cola PIX + o código do
      rolê + instrução ("peça pra cada pessoa mandar o comprovante pra
      mim com o código `XXXX` na legenda da foto").
