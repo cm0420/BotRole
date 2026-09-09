@@ -424,21 +424,13 @@ Remote: `https://github.com/cm0420/BotRole.git`.
   branches só adicionariam cerimônia sem benefício. `main` é o único
   tronco e deve estar sempre no estado mais avançado que já passou nos
   testes relevantes.
-- **Nunca commitar direto na `main`**, exceto o commit inicial de
-  scaffolding (estrutura de pastas vazia, `.gitignore`, este arquivo).
-  Toda feature/fix nasce em branch própria.
-- **Nomenclatura de branch**, prefixo pelo tipo + slug curto em inglês,
-  de preferência mapeando pra uma seção/serviço deste documento:
-  `feat/<slug>` (ex: `feat/pix-service`, `feat/conversation-state-machine`),
-  `fix/<slug>`, `chore/<slug>` (setup, deps, docker, ci), `docs/<slug>`,
-  `test/<slug>`.
-- **Um Pull Request por branch no GitHub**, mesmo sendo desenvolvimento
-  solo — abrir o PR e rodar a skill `/code-review` nele antes de
-  mergear, funcionando como self-review. Não mergear PR com teste
-  quebrado.
-- **Merge por squash** — a `main` recebe 1 commit por feature/fix; o
-  histórico granular fica só na branch (que pode ser deletada depois do
-  merge).
+- **Commit direto na `main`** (a partir de 2026-09-09, por pedido
+  explícito do usuário — o fluxo anterior era branch por feature + PR +
+  self-review antes de mergear; trocado por commitar direto pra ganhar
+  velocidade, já que é desenvolvimento solo). Cada commit deve ainda
+  representar uma unidade coerente de trabalho, testada antes de
+  commitar — a disciplina de "não commitar quebrado" continua valendo,
+  só sem a cerimônia de branch/PR/merge.
 - **Commits em Conventional Commits, em inglês**, mesmo o resto da
   documentação estando em PT-BR: `feat:`, `fix:`, `test:`, `chore:`,
   `docs:`, `refactor:`. Mensagem curta, no imperativo, descrevendo o
