@@ -31,6 +31,8 @@ class ParticipantStatus(str, enum.Enum):
 class ConversationStep(str, enum.Enum):
     aguardando_valor = "aguardando_valor"
     aguardando_num_pessoas = "aguardando_num_pessoas"
+    aguardando_tipo_chave_pix = "aguardando_tipo_chave_pix"
+    aguardando_chave_pix = "aguardando_chave_pix"
     aguardando_confirmacao_encerramento = "aguardando_confirmacao_encerramento"
 
 
@@ -75,6 +77,10 @@ class ConversationState(Base):
     phone: Mapped[str] = mapped_column(String, primary_key=True)
     step: Mapped[ConversationStep] = mapped_column(SAEnum(ConversationStep, name="conversation_step"))
     pending_total_value: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    pending_num_people: Mapped[int | None] = mapped_column(nullable=True)
+    pending_pix_key_type: Mapped[PixKeyType | None] = mapped_column(
+        SAEnum(PixKeyType, name="pix_key_type"), nullable=True
+    )
     pending_role_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"), nullable=True
     )
