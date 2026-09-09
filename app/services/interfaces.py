@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
@@ -21,3 +22,13 @@ class PixGenerator(Protocol):
         merchant_city: str,
         txid: str,
     ) -> PixPayload: ...
+
+
+@dataclass(frozen=True)
+class OcrResult:
+    extracted_value: Decimal | None
+    extracted_date: date | None
+
+
+class OcrExtractor(Protocol):
+    def extrair(self, image_bytes: bytes) -> OcrResult: ...
