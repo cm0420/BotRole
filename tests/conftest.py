@@ -1,5 +1,15 @@
+import os
 import uuid
 from datetime import datetime, timezone
+
+# Precisa rodar antes de qualquer import de app.* — app/core/config.py
+# instancia Settings() (e app/db/base.py cria a engine, validando a URL) no
+# carregamento do módulo. Testes usam só fakes/mocks, nunca conectam de
+# verdade, mas o valor ainda precisa ser sintaticamente parseável.
+os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://test:test@localhost/test")
+os.environ.setdefault("WHATSAPP_TOKEN", "test-token")
+os.environ.setdefault("WHATSAPP_PHONE_NUMBER_ID", "test-phone-id")
+os.environ.setdefault("WHATSAPP_VERIFY_TOKEN", "x")
 
 import pytest
 
